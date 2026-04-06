@@ -1,7 +1,7 @@
 /* @meta
 {
   "name": "starbucks/checkout",
-  "description": "Checkout and place your Starbucks order. First open: bb-browser open 'https://www.starbucks.com/menu/cart'",
+  "description": "Checkout and place your Starbucks order",
   "domain": "www.starbucks.com",
   "args": {
     "password": {"required": true, "description": "Your Starbucks account password (required for order confirmation)"}
@@ -14,7 +14,7 @@ async function(args) {
   if (!args.password) return { error: 'Missing argument: password', hint: 'Password is required to confirm checkout' };
 
   if (!window.location.pathname.includes('/menu/cart')) {
-    return { error: 'Not on cart page', hint: 'First run: bb-browser open "https://www.starbucks.com/menu/cart"' };
+    return { error: 'Not on cart page', hint: 'Run: bb-browser open "https://www.starbucks.com/menu/cart" then retry' };
   }
 
   await new Promise(r => setTimeout(r, 1000));

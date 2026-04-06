@@ -1,7 +1,7 @@
 /* @meta
 {
   "name": "starbucks/cart",
-  "description": "View Starbucks cart. First open: bb-browser open 'https://www.starbucks.com/menu/cart'",
+  "description": "View Starbucks cart contents and pricing",
   "domain": "www.starbucks.com",
   "args": {},
   "readOnly": true,
@@ -10,15 +10,15 @@
 */
 async function(args) {
   if (!window.location.pathname.includes('/menu/cart')) {
-    return { error: 'Not on cart page', hint: 'First run: bb-browser open "https://www.starbucks.com/menu/cart"' };
+    return { error: 'Not on cart page', hint: 'Run: bb-browser open "https://www.starbucks.com/menu/cart" then retry' };
   }
 
-  await new Promise(r => setTimeout(r, 2000));
+  await new Promise(r => setTimeout(r, 1500));
 
   const pageText = document.body.textContent || '';
 
   if (pageText.includes('Your cart is empty') || pageText.includes('Start your order')) {
-    return { items: [], total: null, hint: 'Cart is empty' };
+    return { items: [], total: null, hint: 'Cart is empty. Use starbucks/add to add items.' };
   }
 
   // Parse items using h3 headings (product names in cart)
@@ -34,14 +34,8 @@ async function(args) {
     const cardText = card.textContent || '';
     const sizeMatch = cardText.match(/(Tall|Grande|Venti|Trenta)\s+\d+\s*fl\s*oz/i);
     const priceMatch = cardText.match(/\$(\d+\.\d{2})/);
-    const calMatch = cardText.match(/\b(\d{2,3})\s+Calories/);
 
-    items.push({
-      name,
-      size: sizeMatch?.[0],
-      calories: calMatch?.[1],
-      price: priceMatch ? '$' + priceMatch[1] : null
-    });
+    items.push({ name, size: sizeMatch?.[0], price: priceMatch ? '$' + priceMatch[1] : null });
   }
 
   const countMatch = pageText.match(/Review order \((\d+)\)/);
