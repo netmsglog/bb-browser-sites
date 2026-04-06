@@ -4,9 +4,9 @@
   "description": "Add a product to the Starbucks order cart",
   "domain": "www.starbucks.com",
   "args": {
+    "product": {"required": true, "description": "Product URI, e.g. '483/iced'. Get from starbucks/menu."},
     "size": {"required": false, "description": "Size: Tall, Grande, Venti, Trenta"},
-    "milk": {"required": false, "description": "Milk: 'Oat Milk', 'Almond Milk', '2% Milk', etc."},
-    "product": {"required": true, "description": "Product URI, e.g. '483/iced'. Get from starbucks/menu."}
+    "milk": {"required": false, "description": "Milk: 'Oat Milk', 'Almond Milk', '2% Milk', etc."}
   },
   "readOnly": false,
   "example": "bb-browser site starbucks/add 483/iced --size Venti"
