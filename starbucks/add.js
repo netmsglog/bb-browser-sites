@@ -2,7 +2,8 @@
 {
   "name": "starbucks/add",
   "description": "Add product to Starbucks cart",
-  "domain": "www.starbucks.com",
+  "domain": "www.starbucks.com/menu/product/--add--",
+  "openUrl": "https://www.starbucks.com/menu/product/${product}",
   "args": {
     "product": {"required": true, "description": "Product URI, e.g. '483/iced'. Get from starbucks/menu."},
     "size": {"required": false, "description": "Size: Tall, Grande, Venti, Trenta"},
@@ -17,18 +18,17 @@ async function(args) {
     return { error: 'Missing or invalid product URI', hint: 'Get URIs from: bb-browser site starbucks/menu --category Frappuccino' };
   }
 
-  const targetPath = '/menu/product/' + args.product;
-
-  if (!window.location.pathname.includes(targetPath)) {
-    const cmd = 'bb-browser open "https://www.starbucks.com' + targetPath + '" && sleep 5 && bb-browser site starbucks/add ' + args.product + (args.size ? ' --size ' + args.size : '') + (args.milk ? ' --milk "' + args.milk + '"' : '');
-    return { error: 'Not on product page. Run: ' + cmd };
-  }
-
-  for (let i = 0; i < 20; i++) {
+  // Wait for product page to fully load (opened via openUrl)
+  for (let i = 0; i < 40; i++) {
     if (document.body.textContent.includes('Add to Order')) break;
     await new Promise(r => setTimeout(r, 500));
   }
 
+  if (!document.body.textContent.includes('Add to Order')) {
+    return { error: 'Product page not loaded' };
+  }
+
+  // Select size
   if (args.size) {
     const sizeTarget = args.size.toLowerCase();
     for (const label of document.querySelectorAll('label')) {
@@ -41,6 +41,7 @@ async function(args) {
     }
   }
 
+  // Select milk
   if (args.milk) {
     const milkTarget = args.milk.toLowerCase();
     for (const sel of document.querySelectorAll('select')) {
