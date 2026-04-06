@@ -16,14 +16,11 @@ async function(args) {
 
   const limit = parseInt(args.limit) || 5;
 
-  // Navigate to store locator if not already there
   if (!window.location.pathname.includes('/store-locator')) {
-    window.location.href = '/store-locator?source=menu';
-    for (let i = 0; i < 30; i++) {
-      await new Promise(r => setTimeout(r, 500));
-      if (document.querySelector('input[role="searchbox"], input[aria-label*="location"]')) break;
-    }
-    await new Promise(r => setTimeout(r, 1000));
+    return {
+      error: 'Not on store locator page',
+      hint: 'Run first: bb-browser open "https://www.starbucks.com/store-locator?source=menu" && sleep 5 && bb-browser site starbucks/stores "' + args.place + '"'
+    };
   }
 
   // Find and fill the search box
