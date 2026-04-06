@@ -2,18 +2,19 @@
 {
   "name": "starbucks/cart",
   "description": "View Starbucks cart contents and pricing",
-  "domain": "www.starbucks.com",
+  "domain": "www.starbucks.com/menu/cart",
   "args": {},
   "readOnly": true,
   "example": "bb-browser site starbucks/cart"
 }
 */
 async function(args) {
-  if (!window.location.pathname.includes('/menu/cart')) {
-    return { error: 'Not on cart page', hint: 'Run: bb-browser open "https://www.starbucks.com/menu/cart" then retry' };
+  // Wait for cart page to load (domain auto-opens /menu/cart)
+  for (let i = 0; i < 30; i++) {
+    if (window.location.pathname.includes('/menu/cart')) break;
+    await new Promise(r => setTimeout(r, 500));
   }
-
-  await new Promise(r => setTimeout(r, 1500));
+  await new Promise(r => setTimeout(r, 2000));
 
   const pageText = document.body.textContent || '';
 

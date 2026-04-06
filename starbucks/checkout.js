@@ -2,7 +2,7 @@
 {
   "name": "starbucks/checkout",
   "description": "Checkout and place your Starbucks order",
-  "domain": "www.starbucks.com",
+  "domain": "www.starbucks.com/menu/cart",
   "args": {
     "password": {"required": true, "description": "Your Starbucks account password (required for order confirmation)"}
   },
@@ -13,11 +13,12 @@
 async function(args) {
   if (!args.password) return { error: 'Missing argument: password', hint: 'Password is required to confirm checkout' };
 
-  if (!window.location.pathname.includes('/menu/cart')) {
-    return { error: 'Not on cart page', hint: 'Run: bb-browser open "https://www.starbucks.com/menu/cart" then retry' };
+  // Wait for cart page to load (domain auto-opens /menu/cart)
+  for (let i = 0; i < 30; i++) {
+    if (window.location.pathname.includes('/menu/cart')) break;
+    await new Promise(r => setTimeout(r, 500));
   }
-
-  await new Promise(r => setTimeout(r, 1000));
+  await new Promise(r => setTimeout(r, 1500));
 
   // Check for empty cart
   const pageText = document.body.textContent || '';

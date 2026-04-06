@@ -6,19 +6,21 @@
   "args": {
     "size": {"required": false, "description": "Size: Tall, Grande, Venti, Trenta"},
     "milk": {"required": false, "description": "Milk: 'Oat Milk', 'Almond Milk', '2% Milk', etc."},
-    "product": {"required": false, "description": "Product URI for SPA navigation, e.g. '483/iced' (only works from /menu pages)"}
+    "product": {"required": true, "description": "Product URI, e.g. '483/iced'. Get from starbucks/menu."}
   },
   "readOnly": false,
-  "example": "bb-browser site starbucks/add --size Venti"
+  "example": "bb-browser site starbucks/add 483/iced --size Venti"
 }
 */
 async function(args) {
-  // Navigate to product page if product URI given
-  const uri = args.product && /^\d/.test(args.product) ? args.product : null;
+  if (!args.product || !/^\d/.test(args.product)) {
+    return { error: 'Missing or invalid product URI', hint: 'Get URIs from: bb-browser site starbucks/menu --category Frappuccino' };
+  }
 
-  if (uri && !window.location.pathname.includes('/menu/product/' + uri)) {
+  // Navigate to product page via SPA link click
+  if (!window.location.pathname.includes('/menu/product/' + args.product)) {
     const a = document.createElement('a');
-    a.href = '/menu/product/' + uri;
+    a.href = '/menu/product/' + args.product;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -33,8 +35,8 @@ async function(args) {
 
   if (!window.location.pathname.includes('/menu/product/')) {
     return {
-      error: 'Not on a product page',
-      hint: 'Run: bb-browser open "https://www.starbucks.com/menu/product/483/iced" then: bb-browser site starbucks/add --size Venti'
+      error: 'Could not navigate to product page',
+      hint: 'Run: bb-browser open "https://www.starbucks.com/menu/product/' + args.product + '" then retry'
     };
   }
 
