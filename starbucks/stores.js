@@ -1,8 +1,8 @@
 /* @meta
 {
   "name": "starbucks/stores",
-  "description": "Find Starbucks stores near an address, zip, or city. Page stays on store-locator for select-store.",
-  "domain": "www.starbucks.com",
+  "description": "Find Starbucks stores near an address, zip, or city",
+  "domain": "www.starbucks.com/store-locator?source=menu",
   "args": {
     "place": {"required": true, "description": "Address, zip code, or city, e.g. '5 Plumbago, Irvine, CA 92620', '10001', 'Seattle'"},
     "limit": {"required": false, "description": "Number of stores to return (default: 5)"}
@@ -12,24 +12,21 @@
 }
 */
 async function(args) {
-  if (!args.place) return { error: 'Missing argument: place', hint: 'e.g. bb-browser site starbucks/stores "92620"' };
+  if (!args.place) return { error: 'Missing argument: place' };
 
   const limit = parseInt(args.limit) || 5;
 
-  if (!window.location.pathname.includes('/store-locator')) {
-    return {
-      error: 'Not on store locator page',
-      hint: 'Run first: bb-browser open "https://www.starbucks.com/store-locator?source=menu" && sleep 5 && bb-browser site starbucks/stores "' + args.place + '"'
-    };
+  // Wait for store locator page to be ready
+  let searchBox = null;
+  for (let i = 0; i < 30; i++) {
+    searchBox = document.querySelector('input[role="searchbox"], input[aria-label*="location"]');
+    if (searchBox) break;
+    await new Promise(r => setTimeout(r, 500));
   }
+  if (!searchBox) return { error: 'Store locator not loaded' };
 
-  // Find and fill the search box
-  const searchBox = document.querySelector('input[role="searchbox"], input[aria-label*="location"]');
-  if (!searchBox) return { error: 'Store locator search box not found' };
-
-  // Clear and fill
+  // Fill search box and submit
   searchBox.focus();
-  searchBox.value = '';
   const nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
   nativeSetter.call(searchBox, args.place);
   searchBox.dispatchEvent(new Event('input', { bubbles: true }));
@@ -37,19 +34,17 @@ async function(args) {
 
   await new Promise(r => setTimeout(r, 500));
 
-  // Click submit / press Enter
   const submitBtn = document.querySelector('button[aria-label*="Submit search"], button[aria-label*="submit"]');
   if (submitBtn) submitBtn.click();
   else searchBox.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }));
 
-  // Close autocomplete dropdown by pressing Escape then wait for results
   await new Promise(r => setTimeout(r, 500));
   searchBox.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
 
-  // Wait for store results to update
+  // Wait for store list to update
   await new Promise(r => setTimeout(r, 3000));
 
-  // Also fetch via API for structured data
+  // Fetch structured data via API
   const H = { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' };
   const resp = await fetch('/apiproxy/v1/locations?place=' + encodeURIComponent(args.place), { credentials: 'include', headers: H });
   if (!resp.ok) return { error: 'HTTP ' + resp.status };
