@@ -1,7 +1,7 @@
 /* @meta
 {
   "name": "starbucks/add",
-  "description": "Add product to Starbucks cart. Run bb-browser open product page first if needed.",
+  "description": "Add product to Starbucks cart",
   "domain": "www.starbucks.com",
   "args": {
     "product": {"required": true, "description": "Product URI, e.g. '483/iced'. Get from starbucks/menu."},
@@ -19,15 +19,11 @@ async function(args) {
 
   const targetPath = '/menu/product/' + args.product;
 
-  // If not on this product page, open it (navigates current tab)
   if (!window.location.pathname.includes(targetPath)) {
-    // Navigate and let eval fail — next run will find the tab on the right page
-    window.location.href = 'https://www.starbucks.com' + targetPath;
-    await new Promise(r => setTimeout(r, 60000));
-    return; // unreachable, eval will disconnect
+    const cmd = 'bb-browser open "https://www.starbucks.com' + targetPath + '" && sleep 5 && bb-browser site starbucks/add ' + args.product + (args.size ? ' --size ' + args.size : '') + (args.milk ? ' --milk "' + args.milk + '"' : '');
+    return { error: 'Not on product page. Run: ' + cmd };
   }
 
-  // On the product page — proceed
   for (let i = 0; i < 20; i++) {
     if (document.body.textContent.includes('Add to Order')) break;
     await new Promise(r => setTimeout(r, 500));
